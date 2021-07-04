@@ -18,9 +18,6 @@ func TestTimeTool(t *testing.T) {
 		UpdatedAt: time.Now(),
 	}
 	bytes, err := json.Marshal(&m)
-	if err != nil {
-		t.Error(err)
-		return
-	}
+	ErrExit(t, err)
 	t.Log(string(bytes))
 }
