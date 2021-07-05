@@ -61,12 +61,48 @@ func PathIsExist(path string) bool {
 		if os.IsExist(err) {
 			return true
 		}
-		if os.IsNotExist(err) {
-			return false
-		}
 		return false
 	}
 	return true
+}
+
+// IsDir 判断所给路径是否为文件夹
+func IsDir(path string) bool {
+	s, err := os.Stat(path)
+	if err != nil {
+		return false
+	}
+	return s.IsDir()
+}
+
+// IsFile 判断所给路径是否为文件
+func IsFile(path string) bool {
+	return PathIsExist(path) && !IsDir(path)
+}
+
+// DirIsContainDir 判断所给子路径是否在父路径之下
+// pDir 父路径
+// cDir 子路径
+func DirIsContainDir(pDir string, cDir string) bool {
+	if !PathIsExist(pDir) || !PathIsExist(cDir) {
+		return false
+	}
+
+	pDir, _ = filepath.Abs(pDir)
+	cDir, _ = filepath.Abs(cDir)
+
+	if !IsDir(pDir) && IsDir(cDir) {
+		return false
+	}
+	if !IsDir(pDir) && !IsDir(cDir) {
+		return pDir == cDir
+	}
+
+	rel, err := filepath.Rel(pDir, cDir)
+	if err != nil {
+		return false
+	}
+	return !strings.HasPrefix(rel, "..")
 }
 
 // GetCurrentPath 获取当前绝对路径

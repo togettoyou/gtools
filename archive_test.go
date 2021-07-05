@@ -7,7 +7,7 @@ import (
 func TestArchiveTool(t *testing.T) {
 	ErrExit(TarFilesDirs(
 		[]string{"./"},
-		[]string{"temp", ".git", ".gitignore", ".idea"},
+		[]string{"temp", ".git", ".idea", ".DS_Store"},
 		"temp/gtools.tar.gz",
 		func(path string, written int64) {
 			t.Logf("成功打包 %s ，写入 %d 字节的数据\n", path, written)

@@ -49,7 +49,7 @@ func TarFilesDirs(paths, excludePaths []string, tarFilePath string, onWatch func
 			}
 
 			for _, excludePath := range excludePaths {
-				if strings.HasPrefix(path, excludePath) {
+				if DirIsContainDir(excludePath, path) {
 					return nil
 				}
 			}

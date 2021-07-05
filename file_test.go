@@ -30,4 +30,19 @@ func TestFileTool(t *testing.T) {
 	base64Str, err := FileToBase64("temp/test.png")
 	ErrExit(err)
 	t.Log(base64Str)
+
+	dir := "temp"
+	if IsDir(dir) {
+		t.Logf("%s 是文件夹", dir)
+	}
+	file := "file.go"
+	if IsFile(file) {
+		t.Logf("%s 是文件", file)
+	}
+
+	pDir := ".github"
+	cDir := ".github/workflows"
+	if DirIsContainDir(pDir, cDir) {
+		t.Logf("%s 在 %s 文件夹下", cDir, pDir)
+	}
 }
