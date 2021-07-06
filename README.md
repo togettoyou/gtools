@@ -5,5 +5,5 @@
 ### Install
 
 ```
-$ go get -u -v github.com/togettoyou/gtools
+go get -u -v github.com/togettoyou/gtools
 ```
