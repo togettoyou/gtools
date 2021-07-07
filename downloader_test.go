@@ -16,7 +16,7 @@ func TestDownloaderTool(t *testing.T) {
 		},
 	)
 	ErrExit(downloader.Download(
-		"https://studygolang.com/dl/golang/go1.16.5.src.tar.gz",
-		"./temp/go1.16.5.src.tar.gz",
+		"http://www.baidu.com/img/bd_logo1.png",
+		"./temp/bd_logo1.png",
 	))
 }

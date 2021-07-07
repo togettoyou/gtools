@@ -35,8 +35,12 @@ func (d *downloader) Download(url, filename string) error {
 		return errors.New(fmt.Sprintf("download fail: %s", resp.Status))
 	}
 
+	if err := MkdirAll(filename); err != nil {
+		return err
+	}
+
 	if resp.Header.Get("Accept-Ranges") == "bytes" {
-		// TODO
+		// TODO 支持分段下载
 	}
 
 	return d.singleDownload(url, filename)
@@ -49,9 +53,6 @@ func (d *downloader) singleDownload(url, filename string) error {
 	}
 	defer resp.Body.Close()
 
-	if err := MkdirAll(filename); err != nil {
-		return err
-	}
 	f, err := os.OpenFile(filename, os.O_CREATE|os.O_WRONLY, 0666)
 	if err != nil {
 		return err

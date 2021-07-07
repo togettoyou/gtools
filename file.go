@@ -45,6 +45,9 @@ func CreateFile(data, path string) error {
 // MkdirAll 自动根据路径创建文件夹
 func MkdirAll(path string) error {
 	folder, _ := filepath.Split(path)
+	if folder == "" {
+		return nil
+	}
 	if !PathIsExist(folder) {
 		err := os.MkdirAll(folder, os.ModePerm)
 		if err != nil {
@@ -102,7 +105,8 @@ func DirIsContainDir(pDir string, cDir string) bool {
 	if err != nil {
 		return false
 	}
-	return !strings.HasPrefix(rel, "..")
+	rel = strings.Replace(rel, "\\", "/", -1)
+	return !strings.HasPrefix(rel, "../")
 }
 
 // GetCurrentPath 获取当前绝对路径
