@@ -44,7 +44,23 @@ func (d *downloader) SetResume(resume bool) *downloader {
 	return d
 }
 
-func (d *downloader) Download(url, filename string) error {
+type writeCounter struct {
+	current    int
+	total      int
+	percentage float64
+	onWatch    func(current, total int, percentage float64)
+}
+
+func (wc *writeCounter) Write(p []byte) (int, error) {
+	n := len(p)
+	if wc.onWatch != nil {
+		wc.current += n
+		wc.onWatch(wc.current, wc.total, float64(wc.current*10000/wc.total)/100)
+	}
+	return n, nil
+}
+
+func (d *downloader) Download(url, filename string, onWatch func(current, total int, percentage float64)) error {
 	if filename == "" {
 		filename = path.Base(url)
 	}
@@ -62,20 +78,27 @@ func (d *downloader) Download(url, filename string) error {
 		return err
 	}
 
+	wc := &writeCounter{}
+	if onWatch != nil {
+		wc.onWatch = onWatch
+	}
+
 	if d.multi && resp.Header.Get("Accept-Ranges") == "bytes" {
 		// 支持分段下载
 		return d.multiDownload(url, filename, int(resp.ContentLength))
 	}
 
-	return d.singleDownload(url, filename)
+	return d.singleDownload(wc, url, filename)
 }
 
-func (d *downloader) singleDownload(url, filename string) error {
+func (d *downloader) singleDownload(wc *writeCounter, url, filename string) error {
 	resp, err := http.Get(url)
 	if err != nil {
 		return err
 	}
 	defer resp.Body.Close()
+
+	wc.total = int(resp.ContentLength)
 
 	f, err := os.OpenFile(filename, os.O_CREATE|os.O_WRONLY, 0666)
 	if err != nil {
@@ -83,7 +106,7 @@ func (d *downloader) singleDownload(url, filename string) error {
 	}
 	defer f.Close()
 
-	_, err = io.Copy(f, resp.Body)
+	_, err = io.Copy(f, io.TeeReader(resp.Body, wc))
 	return err
 }
 
