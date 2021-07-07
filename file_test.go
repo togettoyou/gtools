@@ -1,6 +1,7 @@
 package gtools
 
 import (
+	"fmt"
 	"testing"
 	"time"
 )
@@ -41,8 +42,25 @@ func TestFileTool(t *testing.T) {
 	}
 
 	pDir := ".github"
-	cDir := ".github/workflows"
-	if DirIsContainDir(pDir, cDir) {
-		t.Logf("%s 在 %s 文件夹下", cDir, pDir)
+	cDir1 := ".github/workflows"
+	s1 := fmt.Sprintf("%s 在 %s 文件夹下", cDir1, pDir)
+	cDir2 := ".gitignore"
+	s2 := fmt.Sprintf("%s 不在 %s 文件夹下", cDir2, pDir)
+	cDir3 := ".github/workflows/go.yml"
+	s3 := fmt.Sprintf("%s 在 %s 文件夹下", cDir3, pDir)
+	if DirIsContainDir(pDir, cDir1) {
+		t.Logf(s1)
+	} else {
+		t.Errorf(s1)
+	}
+	if !DirIsContainDir(pDir, cDir2) {
+		t.Logf(s2)
+	} else {
+		t.Errorf(s2)
+	}
+	if DirIsContainDir(pDir, cDir3) {
+		t.Logf(s3)
+	} else {
+		t.Errorf(s3)
 	}
 }
