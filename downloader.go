@@ -49,11 +49,14 @@ type writeCounter struct {
 	total      int
 	percentage float64
 	onWatch    func(current, total int, percentage float64)
+	sync.Mutex
 }
 
 func (wc *writeCounter) Write(p []byte) (int, error) {
 	n := len(p)
 	if wc.onWatch != nil {
+		wc.Lock()
+		defer wc.Unlock()
 		wc.current += n
 		wc.onWatch(wc.current, wc.total, float64(wc.current*10000/wc.total)/100)
 	}
@@ -78,14 +81,14 @@ func (d *downloader) Download(url, filename string, onWatch func(current, total 
 		return err
 	}
 
-	wc := &writeCounter{}
+	wc := new(writeCounter)
 	if onWatch != nil {
 		wc.onWatch = onWatch
 	}
 
 	if d.multi && resp.Header.Get("Accept-Ranges") == "bytes" {
 		// 支持分段下载
-		return d.multiDownload(url, filename, int(resp.ContentLength))
+		return d.multiDownload(wc, url, filename, int(resp.ContentLength))
 	}
 
 	return d.singleDownload(wc, url, filename)
@@ -110,8 +113,9 @@ func (d *downloader) singleDownload(wc *writeCounter, url, filename string) erro
 	return err
 }
 
-func (d *downloader) multiDownload(url, filename string, contentLen int) error {
+func (d *downloader) multiDownload(wc *writeCounter, url, filename string, contentLen int) error {
 
+	wc.total = contentLen
 	partSize := contentLen / d.concurrency
 
 	wg := sync.WaitGroup{}
@@ -136,10 +140,11 @@ func (d *downloader) multiDownload(url, filename string, contentLen int) error {
 				content, err := ioutil.ReadFile(d.getPartFilename(filename, i))
 				if err == nil {
 					downloaded = len(content)
+					wc.Write(content)
 				}
 			}
 
-			d.downloadPartial(url, filename, rangeStart+downloaded, rangeEnd, i)
+			d.downloadPartial(wc, url, filename, rangeStart+downloaded, rangeEnd, i)
 
 		}(i, rangeStart)
 
@@ -151,7 +156,7 @@ func (d *downloader) multiDownload(url, filename string, contentLen int) error {
 	return d.merge(filename)
 }
 
-func (d *downloader) downloadPartial(url, filename string, rangeStart, rangeEnd, i int) {
+func (d *downloader) downloadPartial(wc *writeCounter, url, filename string, rangeStart, rangeEnd, i int) {
 	if rangeStart >= rangeEnd {
 		return
 	}
@@ -178,7 +183,7 @@ func (d *downloader) downloadPartial(url, filename string, rangeStart, rangeEnd,
 	}
 	defer partFile.Close()
 
-	_, err = io.Copy(partFile, resp.Body)
+	_, err = io.Copy(partFile, io.TeeReader(resp.Body, wc))
 	if err != nil {
 		return
 	}
