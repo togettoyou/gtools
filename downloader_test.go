@@ -17,7 +17,7 @@ func TestDownloaderTool(t *testing.T) {
 
 	ErrExit(downloader.Download(
 		"http://www.baidu.com/img/bd_logo1.png",
-		"./temp/bd_logo1.png",
+		"./temp/",
 		onWatch,
 	))
 	fmt.Printf("\n")

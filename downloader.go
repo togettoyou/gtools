@@ -64,21 +64,22 @@ func (wc *writeCounter) Write(p []byte) (int, error) {
 }
 
 func (d *downloader) Download(url, filename string, onWatch func(current, total int, percentage float64)) error {
-	if filename == "" {
-		filename = path.Base(url)
-	}
-
 	resp, err := http.Head(url)
 	if err != nil {
 		return err
 	}
-
 	if resp.StatusCode != http.StatusOK {
 		return errors.New(fmt.Sprintf("download fail: %s", resp.Status))
 	}
 
+	if filename == "" {
+		filename = path.Base(url)
+	}
 	if err := MkdirAll(filename); err != nil {
 		return err
+	}
+	if IsDir(filename) {
+		filename = filename + "/" + path.Base(url)
 	}
 
 	wc := new(writeCounter)
